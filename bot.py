@@ -34,7 +34,7 @@ def release_lock():
 acquire_lock()
 
 async def send_message():
-    channel = client.get_channel(1217993869275168811)
+    channel = client.get_channel(1236954659554459648)
 
     async def get_data(username, password):
         headers = {'Authorization': 'Basic ' + base64.b64encode(f"{username}:{password}".encode()).decode()}
