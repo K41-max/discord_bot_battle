@@ -1,0 +1,6 @@
+discord.py
+requests
+flask
+gunicorn
+Flask-Caching
+psutil

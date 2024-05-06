@@ -1,0 +1,8 @@
+services:
+  - type: web
+    name: yuki-bbs
+    env: python
+    region: Oregon
+    plan: free
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "gunicorn -w 4 -b 0.0.0.0:$PORT main:app"
