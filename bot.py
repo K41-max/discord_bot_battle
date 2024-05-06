@@ -50,7 +50,7 @@ async def send_message():
             data = await get_data(username, password)
 
             if 'main' in data:
-                main_section = data['main']
+                main_section = data['battle']
                 if main_section and len(main_section) > 0:
                     current_number = int(main_section[0]['number'])
 
