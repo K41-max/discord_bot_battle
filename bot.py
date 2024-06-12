@@ -3,9 +3,9 @@ import os
 import asyncio
 import requests
 import base64
-import json
 import time
 import sys
+from bs4 import BeautifulSoup
 
 client = discord.Client(intents=discord.Intents.default())
 
@@ -18,7 +18,7 @@ def acquire_lock():
         if os.path.exists(LOCK_FILE_PATH):
             print("Another instance is already running. Exiting.")
             sys.exit(0)
-        
+
         with open(LOCK_FILE_PATH, "w") as lockfile:
             lockfile.write(str(os.getpid()))
     except Exception as e:
@@ -38,8 +38,8 @@ async def send_message():
 
     async def get_data(username, password):
         headers = {'Authorization': 'Basic ' + base64.b64encode(f"{username}:{password}".encode()).decode()}
-        response = requests.get('https://yukibbs-server.onrender.com/bbs/admin', headers=headers)
-        return response.json()
+        response = requests.get('https://yukibbs-server.onrender.com/battle/admin', headers=headers)
+        return response.content
 
     async def main():
         username = 'admin'
@@ -47,26 +47,30 @@ async def send_message():
         last_number = None
 
         while True:
-            data = await get_data(username, password)
+            html_content = await get_data(username, password)
 
-            if 'main' in data:
-                main_section = data['battle']
-                if main_section and len(main_section) > 0:
-                    current_number = int(main_section[0]['number'])
+            soup = BeautifulSoup(html_content, 'html.parser')
+            table = soup.find('table')
 
-                    if last_number is not None and current_number == last_number:
-                        await asyncio.sleep(2)
-                        continue
+            if table:
+                rows = table.find_all('tr')
+                if len(rows) > 1:
+                    second_row = rows[1]
+                    first_cell_second_row = second_row.find('td')
+                    current_number = first_cell_second_row.text.strip()
 
-                    info = main_section[0].get('info', 'null')
-                    await channel.send(f"\n\nnumber:{current_number}\nname:{main_section[0]['name']}\nmessage:{main_section[0]['message']}\ninfo:{info}\n")
+                    if last_number is not None and current_number != last_number:
+                        last_cell_second_row = second_row.find_all('td')[-1]
+                        last_cell_content = last_cell_second_row.get_text(separator="\n").strip()
+
+                        await channel.send(f"\n\n```{last_cell_content}```\n")
 
                     last_number = current_number
 
             else:
-                print("No 'main' section found in the response.")
+                print("No table found in the response.")
 
-            await asyncio.sleep(2.1)
+            await asyncio.sleep(2)
 
     try:
         await main()
@@ -84,3 +88,4 @@ async def on_ready():
     release_lock()
 
 client.run(discord_token)
+
