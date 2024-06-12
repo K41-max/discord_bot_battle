@@ -4,3 +4,4 @@ flask
 gunicorn
 Flask-Caching
 psutil
+beautifulsoup4
